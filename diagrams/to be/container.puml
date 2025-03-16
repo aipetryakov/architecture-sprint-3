@@ -1,0 +1,43 @@
+@startuml
+title Smart Home Container Diagram
+
+top to bottom direction
+
+!includeurl ../libs/C4_Component.puml
+
+Person(user, "User", "A user of the Smart Home system")
+
+System_Boundary(SmartHomeSystem, "Smart Home System") {
+  Container(ApiGateway, "API Gateway", "Kong", "An entry point for all client requests. Authorize requests, log metrics")
+  Container(IdentityProvider, "Identity Provider", "KeyCloak", "Users and memberships service")
+  Container(DeviceControl, "Device Control", "Java, Spring boot", "Handles device settings and status")
+  Container(DeviceMetrics, "Device Metrics", "Java, Spring boot", "Handles device metrics")
+  Container(SurveillanceStream, "SurveillanceStream", "Java, Spring boot", "Handles surveillance photo / video stream")
+  Container(Kafka, "Message broker", "Kafka", "Broker for handling messages")
+  Container(ControlDatabase, "Database", "PostgreSQL", "Stores device settings")
+  Container(MetricsDatabase, "Database", "PostgreSQL", "Stores device metrics")
+  Container(ObjectDatabase, "Object Database", "Minio", "Stores photo / video")
+}
+
+System_Ext(DeviceHub, "Device Hub", "Device Hub inside the user house")
+
+Rel(user, DeviceHub, "Plugin devices")
+Rel(DeviceHub, ApiGateway, "Sends device metrics")
+
+Rel(user, ApiGateway, "Views current device state\nSets desired device state\nAdd new device\nView photo and video\nRegister\nLogin")
+Rel(ApiGateway, IdentityProvider, "authenticate users")
+
+Rel(ApiGateway, DeviceControl, "Fetches current device state\nSets desired device state\nAdd new device")
+Rel(DeviceControl, DeviceHub, "Sets desired device state")
+Rel(DeviceControl, Kafka, "Reads event of changes current device state")
+Rel(DeviceControl, ControlDatabase, "Reads/Writes device info and state")
+
+Rel(ApiGateway, DeviceMetrics, "Sends device metrics")
+Rel(DeviceMetrics, Kafka, "Send event of changes current device state")
+Rel(DeviceMetrics, MetricsDatabase, "Reads/Writes current device metrics")
+
+Rel(ApiGateway, SurveillanceStream, "Send and get photo / video stream")
+Rel(SurveillanceStream, Kafka, "Send files info")
+Rel(SurveillanceStream, ObjectDatabase, "Writes and reads photo and video files")
+
+@enduml

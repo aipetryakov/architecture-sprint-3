@@ -1,0 +1,31 @@
+@startuml
+title Smart Home Device Control Component Diagram
+
+top to bottom direction
+
+!includeurl ../libs/C4_Component.puml
+
+Container(ApiGateway, "API Gateway", "Kong", "An entry point for all client requests. Authorize requests, log metrics")
+
+Container(DeviceControl, "Device Control", "Handles device settings and status") {
+    Component(Controllers, "Controllers", "Manages devices")
+    Component(EventConsumer, "Event Consumers", "Handles device state changes event")
+    Component(ServiceLayer, "Service Layer", "Business logic")
+    Component(RepositoryLayer, "Repository Layer", "Data access logic")
+    Component(DeviceHubConnections, "Device Hub Connections", "Manages devices")
+}
+
+Container(Kafka, "Message broker", "Kafka", "Broker for handling messages")
+Container(ControlDatabase, "Database", "PostgreSQL", "Stores device settings")
+System_Ext(DeviceHub, "Device Hub", "Device Hub inside the user house")
+
+Rel(ApiGateway, Controllers, "Fetches current device state\nSets desired device state")
+Rel(Controllers, ServiceLayer, "Calls business logic")
+Rel(EventConsumer, ServiceLayer, "Calls business logic")
+Rel(EventConsumer, Kafka, "Reads event of changes current device state")
+Rel(ServiceLayer,RepositoryLayer, "Reads/Writes data")
+Rel(RepositoryLayer,ControlDatabase, "Reads/Writes device data")
+Rel(ServiceLayer, DeviceHubConnections, "Sets desired device state")
+Rel(DeviceHubConnections, DeviceHub, "Sets desired device state")
+
+@enduml
