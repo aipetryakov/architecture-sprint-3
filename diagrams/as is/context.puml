@@ -1,0 +1,19 @@
+@startuml
+title Smart Home Monolith Context Diagram
+
+top to bottom direction
+
+!includeurl ../libs/C4_Component.puml
+
+Person(user, "User", "A user of the Smart Home Monolith")
+Person(installer, "Installer", "An installer installing temperature devices")
+System(smartHome, "Smart Home Monolith", "Heating control and temperature monitoring")
+
+System_Ext(temperatureDevice, "Temperature Device", "Temperature Device inside the user house")
+
+Rel(user, smartHome, "Use system")
+Rel(installer, smartHome, "Plugin a temperature devices")
+Rel(installer, temperatureDevice, "Install temperature device")
+Rel(smartHome,temperatureDevice,"Fetches current temperature\nSet desired temperature")
+
+@enduml

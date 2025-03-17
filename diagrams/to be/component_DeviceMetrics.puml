@@ -1,0 +1,27 @@
+@startuml
+title Smart Home Device Metrics Component Diagram
+
+top to bottom direction
+
+!includeurl ../libs/C4_Component.puml
+
+Container(ApiGateway, "API Gateway", "Kong", "An entry point for all client requests. Authorize requests, log metrics")
+
+Container(DeviceControl, "Device Metrics", "Handles device metrics") {
+    Component(Controllers, "Controllers", "Handles metrics")
+    Component(EventProducers, "Event Producers", "Produces device state changes event")
+    Component(ServiceLayer, "Service Layer", "Business logic")
+    Component(RepositoryLayer, "Repository Layer", "Data access logic")
+}
+
+Container(Kafka, "Message broker", "Kafka", "Broker for handling messages")
+Container(MetricsDatabase, "Database", "PostgreSQL", "Stores device metrics")
+
+Rel(ApiGateway, Controllers, "Sends device metrics")
+Rel(Controllers, ServiceLayer, "Calls business logic")
+Rel(ServiceLayer, EventProducers, "Write event of changes current device state")
+Rel(EventProducers, Kafka, "Write event of changes current device state")
+Rel(ServiceLayer,RepositoryLayer, "Reads/Writes data")
+Rel(RepositoryLayer,MetricsDatabase, "Reads/Writes device metrics")
+
+@enduml

@@ -1,0 +1,27 @@
+@startuml
+title Smart Home Surveillance Stream Component Diagram
+
+top to bottom direction
+
+!includeurl ../libs/C4_Component.puml
+
+Container(ApiGateway, "API Gateway", "Kong", "An entry point for all client requests. Authorize requests, log metrics")
+
+Container(DeviceControl, "Device Metrics", "Handles device metrics") {
+    Component(Controllers, "Controllers", "Accept photo / video streams")
+    Component(EventProducers, "Event Producers", "Produces file info event")
+    Component(ServiceLayer, "Service Layer", "Business logic")
+    Component(RepositoryLayer, "Repository Layer", "Data access logic")
+}
+
+Container(Kafka, "Message broker", "Kafka", "Broker for handling messages")
+Container(ObjectDatabase, "Object Database", "Minio", "Stores photo / video")
+
+Rel(ApiGateway, Controllers, "Send photo / video stream")
+Rel(Controllers, ServiceLayer, "Calls business logic")
+Rel(ServiceLayer, EventProducers, "Writes file info")
+Rel(EventProducers, Kafka, "Writes file info")
+Rel(ServiceLayer,RepositoryLayer, "Reads/Writes data")
+Rel(RepositoryLayer, ObjectDatabase, "Writes photo / video files")
+
+@enduml

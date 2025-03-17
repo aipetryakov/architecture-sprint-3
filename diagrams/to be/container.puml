@@ -1,0 +1,71 @@
+@startuml
+title Smart Home Container Diagram
+
+top to bottom direction
+
+!includeurl ../libs/C4_Component.puml
+
+Person(user, "User", "A user of the Smart Home system")
+
+System_Boundary(SmartHomeSystem, "Smart Home System") {
+  Container(Website, "Website", "React", "Single Page Application")
+  Container(ApiGateway, "API Gateway", "Kong", "An entry point for all client requests. Authorize requests, log metrics")
+  Container(IdentityProvider, "Identity Provider", "KeyCloak", "Users and memberships service")
+  Container(DeviceControl, "Device Control", "Java, Spring boot", "Handles device settings and status")
+  Container(DeviceMetrics, "Device Metrics", "Java, Spring boot", "Handles device metrics")
+  Container(SurveillanceStream, "SurveillanceStream", "Java, Spring boot", "Handles surveillance photo / video stream")
+  Container(Kafka, "Message broker", "Kafka", "Broker for handling messages")
+  Container(ControlDatabase, "Database", "PostgreSQL", "Stores device settings")
+  Container(MetricsDatabase, "Database", "PostgreSQL", "Stores device metrics")
+  Container(ObjectDatabase, "Object Database", "Minio", "Stores photo / video")
+}
+
+System_Ext(DeviceHub, "Device Hub", "Device Hub inside the user house")
+System_Ext(HeatingDevice, "Heating Device", "Controls temperature")
+System_Ext(LightingDevice, "Lighting Device", "Controls light")
+System_Ext(GateDevice, "Gate Device", "Controls the gates")
+System_Ext(SurveillanceDevice, "Surveillance Device", "Films the surrounding space")
+
+Rel(user, DeviceHub, "Plugin devices")
+Rel(user, ApiGateway, "Register\nLogin\nEdit profile")
+Rel(user, ApiGateway, "Get website pages")
+Rel(user, ApiGateway, "Register house")
+Rel(user, ApiGateway, "Sets desired temperature,\nTurn heating on/off\nSets desired light intensity,\nTurn light on/off\nOpen/close gate\nSet the desired video quality\nTurn recording on/off")
+Rel(user, ApiGateway, "View current temperature,\nView current light intensity,\nView gate state,\nView current video quality")
+Rel(user, ApiGateway, "View recorded photo and video")
+
+Rel(DeviceHub, ApiGateway, "Sends device telemetry")
+Rel(DeviceHub, HeatingDevice, "Sets desired temperature,\nTurn heating on/off")
+Rel(DeviceHub, LightingDevice, "Sets the light intensity,\nTurn light on/off")
+Rel(DeviceHub, GateDevice, "Open/close gate")
+Rel(DeviceHub, SurveillanceDevice, "Set the desired video quality\nTurn recording on/off")
+
+Rel(HeatingDevice, DeviceHub, "Sends surrounding temperature")
+Rel(LightingDevice, DeviceHub, "Sends ambient light level")
+Rel(GateDevice, DeviceHub, "Sends gate position")
+Rel(SurveillanceDevice, DeviceHub, "Sends photo / video stream")
+
+Rel(ApiGateway, IdentityProvider, "Authenticate users")
+Rel(ApiGateway, IdentityProvider, "Register\nLogin\nEdit profile")
+Rel(ApiGateway, Website, "Get website pages")
+Rel(ApiGateway, DeviceHub, "Register house")
+Rel(ApiGateway, DeviceControl, "Sets desired temperature,\nTurn heating on/off\nSets the light intensity,\nTurn light on/off\nOpen/close gate\nSet the desired video quality\nTurn recording on/off")
+Rel(ApiGateway, DeviceControl, "View current temperature,\nView current light intensity,\nView gate state,\nView current video quality")
+Rel(ApiGateway, DeviceControl, "View recorded photo and video")
+Rel(ApiGateway, DeviceMetrics, "Sends device telemetry\n(temperature,photo/video quality,gate state,lighting level)")
+Rel(ApiGateway, SurveillanceStream, "Sends photo / video stream")
+
+Rel(DeviceControl, DeviceHub, "Sets desired temperature,\nTurn heating on/off\nSets the light intensity,\nTurn light on/off\nOpen/close gate\nSet the desired video quality\nTurn recording on/off")
+Rel(DeviceControl, Kafka, "Reads event of changes current device state\n(temperature,photo/video quality,gate state,lighting level)")
+Rel(DeviceControl, Kafka, "Reads recorded photo and video files info")
+Rel(DeviceControl, ControlDatabase, "Reads/Writes device info and current state")
+Rel(DeviceControl, ObjectDatabase, "Reads recorded photo and video files")
+
+Rel(DeviceMetrics, Kafka, "Send event of changes current device state\n(temperature,photo/video quality,gate state,lighting level)")
+Rel(DeviceMetrics, MetricsDatabase, "Reads/Writes device telemetry")
+
+
+Rel(SurveillanceStream, Kafka, "Send recorded photo and video files info")
+Rel(SurveillanceStream, ObjectDatabase, "Writes and reads photo and video files")
+
+@enduml

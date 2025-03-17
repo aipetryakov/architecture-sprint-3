@@ -1,0 +1,68 @@
+@startuml
+title Smart Home Entity Relationship Diagram
+
+top to bottom direction
+
+entity User {
+  Number id
+  String user_id
+  String email
+  String phone
+}
+
+entity Role {
+   Number id
+   String name
+ }
+
+entity House {
+  Number id
+  String user_id
+  String address
+}
+
+entity DeviceType {
+    Number id
+    String name
+}
+
+entity Device {
+  Number id
+  Number device_type_id
+  Number house_id
+  String serial_number
+  String name
+  Boolean connected
+  Boolean turnedOn
+}
+
+entity Media {
+  Number id
+  Number device_id
+  String path
+  Timestamp start
+  Timestamp end
+}
+
+entity ChangeTelemetryEvent {
+    Number device_id
+    Json oldValues
+    Json newValues
+}
+
+entity TelemetryData {
+  Number id
+  Number device_id
+  Timestamp timestamp
+  Json telemetry
+}
+
+User "0..*" -- "0..*" Role : belongs to
+User "0..*" -- "0..*" House : has
+House  "1" *-- "0..*" Device : has
+Device  "1" *-- "0..*" ChangeTelemetryEvent : produced
+Device "0..*" .. "1" DeviceType : is one of
+Device "1" *-- "0..*" TelemetryData : produced
+Device "1" *-- "0..*" Media : produced
+
+@enduml

@@ -1,0 +1,37 @@
+@startuml
+title Smart Home Device Control Set Desired Temperature Code Diagram
+
+top to bottom direction
+
+@startuml
+actor User as User
+participant "Api Gateway" as ApiGateway
+box "Device Control Service"
+participant "Heating Device Controller" as HeatingDeviceController
+participant "Heating Device Service" as HeatingDeviceService
+participant "Heating Device Repository" as HeatingDeviceRepository
+participant "Device Hub Connector" as DeviceHubConnector
+end box
+database "Control Database" as ControlDatabase
+participant DeviceHub as DeviceHub
+
+User -> ApiGateway : set desired temperature\n/devices/heating/{deviceId}/set-temperature\n(authorization header, temperature)
+ApiGateway -> HeatingDeviceController : Set desired temperature\npost /devices/heating/{deviceId}/set-temperature\n(userId, temperature)
+HeatingDeviceController -> HeatingDeviceService : Set desired temperature\nsetTemperature(userId, deviceId, temperature)
+HeatingDeviceService -> HeatingDeviceRepository : GetDevice(userId, deviceId, deviceType)
+HeatingDeviceRepository -> ControlDatabase : GetDevice(userId, deviceId, deviceType)
+HeatingDeviceRepository <-- ControlDatabase : return Device
+HeatingDeviceService <-- HeatingDeviceRepository : return Device
+HeatingDeviceService -> HeatingDeviceRepository: SetTemperature(device)
+HeatingDeviceRepository -> ControlDatabase: SetTemperature(device)
+HeatingDeviceRepository <-- ControlDatabase: return
+HeatingDeviceService <-- HeatingDeviceRepository: return
+HeatingDeviceService -> DeviceHubConnector: setTemperature(houseId, deviceId, temperature)
+DeviceHubConnector -> DeviceHub: setTemperature(deviceId, temperature)
+DeviceHubConnector <-- DeviceHub: return
+HeatingDeviceService <-- DeviceHubConnector: return
+HeatingDeviceController <-- HeatingDeviceService: return
+ApiGateway <-- HeatingDeviceController: return
+User <-- ApiGateway: return
+
+@enduml
